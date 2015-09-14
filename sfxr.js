@@ -617,7 +617,11 @@ sfxr.Sound.prototype.generateTable = function (freq, bits) {
 	*/
 	var next = this.generate(freq, bits);
 	var t = [];
-	while(var v = next()) t.push(v);
+	var v = next();
+	while(v !== null){
+		t.push(v);
+		v = next();
+	}
 	return t;
 }
 
