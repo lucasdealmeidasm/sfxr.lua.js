@@ -15,4 +15,4 @@ These examples should play a randomly generated sound.
 ```
 
 
-**More documentation is available at the [Project Wiki](https://github.com/lucasdealmeidasm/sfxrluajs/wiki)**
+**More documentation is available at the [Project Wiki](https://github.com/lucasdealmeidasm/sfxr.lua.js/wiki)**
