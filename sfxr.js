@@ -617,67 +617,60 @@ sfxr.Sound.prototype.generateTable = function (freq, bits) {
 	*/
 	var next = this.generate(freq, bits);
 	var t = [];
-	var v = next();
-	while(v !== null){
+	var v;
+	while((v = next()) !== null){
 		t.push(v);
-		v = next();
 	}
 	return t;
 }
 
 sfxr.Sound.prototype.generateString = function (freq, bits, endianness) {
-	assert(bits == sfxr.BITS_16 or bits == sfxr.BITS_8, "Invalid bits argument")
-	assert(endianness == "big" or endianness == "little", "Invalid endianness")
-	local s = ""
+	//assert(bits == sfxr.BITS_16 or bits == sfxr.BITS_8, "Invalid bits argument")
+	//assert(endianness == "big" or endianness == "little", "Invalid endianness")
 
-	local buf = {}
-	buf[100] = 0
-	local i = 1
+	var buf = [];
+	
+	var v;
+	var next = this.generate(freq, bits);
+	while((v = next()) !== null) {
+		if (bits == sfxr.BITS_8) {
+			buf.push(v);
+		}
+		else {
+			if (endianness == "big") {
+				buf.push(v >> 8);
+				buf.push(v & 0xFF);
+			}
+			else {
+				buf.push(v & 0xFF);
+				buf.push(v >> 8);
+			}
+		}
+	}
 
-	for v in self:generate(freq, bits) do
-		if bits == sfxr.BITS_8 then
-			buf[i] = v
-			i = i + 1
-		else
-			if endianness == "big" then
-				buf[i] = bit.rshift(v, 8)
-				buf[i + 1] = bit.band(v, 0xFF)
-				i = i + 2
-			else
-				buf[i] = bit.band(v, 0xFF)
-				buf[i + 1] = bit.rshift(v, 8)
-				i = i + 2
-			end
-		end
-
-		if i >= 100 then
-			s = s .. string.char(unpack(buf))
-			i = 0
-		end
-	end
-
-	s = s .. string.char(unpack(buf, i, 100))
-	return s
+	return buf.map(c => String.fromCharCode(c)).join("");
 }
 
 sfxr.Sound.prototype.generateSoundData = function (freq, bits) {
-	freq = freq or sfxr.FREQ_44100
-	local tab = self:generateTable(freq, sfxr.BITS_FLOAT)
+	freq = freq ? freq : sfxr.FREQ_44100;
+	var tab = this.generateTable(freq, sfxr.BITS_FLOAT);
 
-	if #tab == 0 then
-		return nil
-	end
-
+	if (tab.length == 0) {
+		return null;
+	}
+	
+	/*
 	local data = love.sound.newSoundData(#tab, freq, bits, 1)
 
 	for i = 0, #tab - 1 do
 		data:setSample(i, tab[i + 1])
 	end
-
-	return data
+	*/
+	return data;
 }
 
 sfxr.Sound.prototype.play = function (freq, bits) {
+	/*
 	local data = self:generateSoundData(freq, bits)
 
 	if data then
@@ -685,108 +678,108 @@ sfxr.Sound.prototype.play = function (freq, bits) {
 		source:play()
 		return source
 	end
+	*/
 }
 
-sfxr.Sound.prototype.randomize = function (seed) {
-	if seed then setseed(seed) end
+sfxr.Sound.prototype.randomize = function () {
+	var wavetype = this.wavetype;
+	this.resetParameters();
+	this.wavetype = wavetype;
 
-	local wavetype = self.wavetype
-	self:resetParameters()
-	self.wavetype = wavetype
+	if (maybe()) {
+		this.repeatspeed = random(0, 1);
+	}
 
-	if maybe() then
-		self.repeatspeed = random(0, 1)
-	end
+	if (maybe()) {
+		this.frequency.start = Math.pow(random(-1, 1),3) + 0.5;
+	}
+	else {
+		this.frequency.start = Math.pow(random(-1, 1),2);
+	}
+	this.frequency.limit = 0;
+	this.frequency.slide = Math.pow(random(-1, 1),5);
+	if (this.frequency.start > 0.7 && this.frequency.slide > 0.2) {
+		this.frequency.slide = -this.frequency.slide;
+	}
+	else if (this.frequency.start < 0.2 && this.frequency.slide <-0.05) {
+		this.frequency.slide = -this.frequency.slide;
+	}
+	this.frequency.dslide = Math.pow(random(-1, 1),3);
 
-	if maybe() then
-		self.frequency.start = random(-1, 1)^3 + 0.5
-	else
-		self.frequency.start = random(-1, 1)^2
-	end
-	self.frequency.limit = 0
-	self.frequency.slide = random(-1, 1)^5
-	if self.frequency.start > 0.7 and self.frequency.slide > 0.2 then
-		self.frequency.slide = -self.frequency.slide
-	elseif self.frequency.start < 0.2 and self.frequency.slide <-0.05 then
-		self.frequency.slide = -self.frequency.slide
-	end
-	self.frequency.dslide = random(-1, 1)^3
+	this.duty.ratio = random(-1, 1);
+	this.duty.sweep = Math.pow(random(-1, 1),3);
 
-	self.duty.ratio = random(-1, 1)
-	self.duty.sweep = random(-1, 1)^3
+	this.vibrato.depth = Math.pow(random(-1, 1),3);
+	this.vibrato.speed = random(-1, 1);
+	this.vibrato.delay = random(-1, 1);
 
-	self.vibrato.depth = random(-1, 1)^3
-	self.vibrato.speed = random(-1, 1)
-	self.vibrato.delay = random(-1, 1)
-
-	self.envelope.attack = random(-1, 1)^3
-	self.envelope.sustain = random(-1, 1)^2
-	self.envelope.punch = random(-1, 1)^2
-	self.envelope.decay = random(-1, 1)
+	this.envelope.attack = Math.pow(random(-1, 1),3);
+	this.envelope.sustain = Math.pow(random(-1, 1),2);
+	this.envelope.punch = Math.pow(random(-1, 1),2);
+	this.envelope.decay = random(-1, 1);
 	
-	if self.envelope.attack + self.envelope.sustain + self.envelope.decay < 0.2 then
-		self.envelope.sustain = self.envelope.sustain + 0.2 + random(0, 0.3)
-		self.envelope.decay = self.envelope.decay + 0.2 + random(0, 0.3)
-	end
+	if (this.envelope.attack + this.envelope.sustain + this.envelope.decay < 0.2) {
+		this.envelope.sustain = this.envelope.sustain + 0.2 + random(0, 0.3);
+		this.envelope.decay = this.envelope.decay + 0.2 + random(0, 0.3);
+	}
 
-	self.lowpass.resonance = random(-1, 1)
-	self.lowpass.cutoff = 1 - random(0, 1)^3
-	self.lowpass.sweep = random(-1, 1)^3
-	if self.lowpass.cutoff < 0.1 and self.lowpass.sweep < -0.05 then
-		self.lowpass.sweep = -self.lowpass.sweep
-	end
-	self.highpass.cutoff = random(0, 1)^3
-	self.highpass.sweep = random(-1, 1)^5
+	this.lowpass.resonance = random(-1, 1)
+	this.lowpass.cutoff = 1 - Math.pow(random(0, 1),3);
+	this.lowpass.sweep = Math.pow(random(-1, 1),3);
+	if (this.lowpass.cutoff < 0.1 && this.lowpass.sweep < -0.05) {
+		this.lowpass.sweep = -this.lowpass.sweep;
+	}
+	this.highpass.cutoff = Math.pow(random(0, 1),3);
+	this.highpass.sweep = Math.pow(random(-1, 1),5);
 
-	self.phaser.offset = random(-1, 1)^3
-	self.phaser.sweep = random(-1, 1)^3
+	this.phaser.offset = Math.pow(random(-1, 1),3);
+	this.phaser.sweep = Math.pow(random(-1, 1),3);
 
-	self.change.speed = random(-1, 1)
-	self.change.amount = random(-1, 1)
+	this.change.speed = random(-1, 1);
+	this.change.amount = random(-1, 1);
 
-	self:sanitizeParameters()
+	this.sanitizeParameters();
 }
 
 sfxr.Sound.prototype.mutate = function (amount, seed, changeFreq) {
-	if seed then setseed(seed) end
-	local amount = (amount or 1)
-	local a = amount / 20
-	local b = (1 - a) * 10
-	local changeFreq = (changeFreq == nil) and true or changeFreq
+	amount = (amount ? amount : 1);
+	var a = amount / 20;
+	var b = (1 - a) * 10;
+	var changeFreq = (changeFreq == null) && true || changeFreq;
 
-	if changeFreq == true then
-		if maybe(b) then self.frequency.start = self.frequency.start + random(-a, a) end
-		if maybe(b) then self.frequency.slide = self.frequency.slide + random(-a, a) end
-		if maybe(b) then self.frequency.dslide = self.frequency.dslide + random(-a, a) end
-	end
+	if (changeFreq) {
+		if (maybe(b)) this.frequency.start = this.frequency.start + random(-a, a);
+		if (maybe(b)) this.frequency.slide = this.frequency.slide + random(-a, a);
+		if (maybe(b)) this.frequency.dslide = this.frequency.dslide + random(-a, a);
+	}
 
-	if maybe(b) then self.duty.ratio = self.duty.ratio + random(-a, a) end
-	if maybe(b) then self.duty.sweep = self.duty.sweep + random(-a, a) end
+	if (maybe(b))  this.duty.ratio = this.duty.ratio + random(-a, a);
+	if (maybe(b))  this.duty.sweep = this.duty.sweep + random(-a, a);
 
-	if maybe(b) then self.vibrato.depth = self.vibrato.depth + random(-a, a) end
-	if maybe(b) then self.vibrato.speed = self.vibrato.speed + random(-a, a) end
-	if maybe(b) then self.vibrato.delay = self.vibrato.delay + random(-a, a) end
+	if (maybe(b))  this.vibrato.depth = this.vibrato.depth + random(-a, a);
+	if (maybe(b))  this.vibrato.speed = this.vibrato.speed + random(-a, a);
+	if (maybe(b))  this.vibrato.delay = this.vibrato.delay + random(-a, a);
 
-	if maybe(b) then self.envelope.attack = self.envelope.attack + random(-a, a) end
-	if maybe(b) then self.envelope.sustain = self.envelope.sustain + random(-a, a) end
-	if maybe(b) then self.envelope.punch = self.envelope.punch + random(-a, a) end
-	if maybe(b) then self.envelope.decay = self.envelope.decay + random(-a, a) end
+	if (maybe(b))  this.envelope.attack = this.envelope.attack + random(-a, a);
+	if (maybe(b))  this.envelope.sustain = this.envelope.sustain + random(-a, a);
+	if (maybe(b))  this.envelope.punch = this.envelope.punch + random(-a, a);
+	if (maybe(b))  this.envelope.decay = this.envelope.decay + random(-a, a);
 
-	if maybe(b) then self.lowpass.resonance = self.lowpass.resonance + random(-a, a) end
-	if maybe(b) then self.lowpass.cutoff = self.lowpass.cutoff + random(-a, a) end
-	if maybe(b) then self.lowpass.sweep = self.lowpass.sweep + random(-a, a) end
-	if maybe(b) then self.highpass.cutoff = self.highpass.cutoff + random(-a, a) end
-	if maybe(b) then self.highpass.sweep = self.highpass.sweep + random(-a, a) end
+	if (maybe(b))  this.lowpass.resonance = this.lowpass.resonance + random(-a, a);
+	if (maybe(b))  this.lowpass.cutoff = this.lowpass.cutoff + random(-a, a);
+	if (maybe(b))  this.lowpass.sweep = this.lowpass.sweep + random(-a, a);
+	if (maybe(b))  this.highpass.cutoff = this.highpass.cutoff + random(-a, a);
+	if (maybe(b))  this.highpass.sweep = this.highpass.sweep + random(-a, a);
 
-	if maybe(b) then self.phaser.offset = self.phaser.offset + random(-a, a) end
-	if maybe(b) then self.phaser.sweep = self.phaser.sweep + random(-a, a) end
+	if (maybe(b))  this.phaser.offset = this.phaser.offset + random(-a, a);
+	if (maybe(b))  this.phaser.sweep = this.phaser.sweep + random(-a, a);
 
-	if maybe(b) then self.change.speed = self.change.speed + random(-a, a) end
-	if maybe(b) then self.change.amount = self.change.amount + random(-a, a) end
+	if (maybe(b))  this.change.speed = this.change.speed + random(-a, a);
+	if (maybe(b))  this.change.amount = this.change.amount + random(-a, a);
 
-	if maybe(b) then self.repeatspeed = self.repeatspeed + random(-a, a) end
+	if (maybe(b))  this.repeatspeed = this.repeatspeed + random(-a, a);
 
-	self:sanitizeParameters()
+	this.sanitizeParameters();
 }
 
 sfxr.Sound.prototype.randomPickup = function (seed) {
@@ -805,87 +798,88 @@ sfxr.Sound.prototype.randomPickup = function (seed) {
 }
 
 sfxr.Sound.prototype.randomLaser = function (seed) {
-	if seed then setseed(seed) end
-	self:resetParameters()
-	self.wavetype = trunc(random(0, 3))
-	if self.wavetype == sfxr.SINE and maybe() then
-		self.wavetype = trunc(random(0, 1))
-	end
+	this.resetParameters();
+	this.wavetype = trunc(random(0, 3));
+	if (this.wavetype == sfxr.SINE && maybe()) {
+		this.wavetype = trunc(random(0, 1));
+	}
 
-	if maybe(2) then
-		self.frequency.start = random(0.3, 0.9)
-		self.frequency.min = random(0, 0.1)
-		self.frequency.slide = random(-0.65, -0.35)
-	else
-		self.frequency.start = random(0.5, 1)
-		self.frequency.min = clamp(self.frequency.start - random(0.2, 0.4), 0.2)
-		self.frequency.slide = random(-0.35, -0.15)
-	end
+	if (maybe(2)) {
+		this.frequency.start = random(0.3, 0.9);
+		this.frequency.min = random(0, 0.1);
+		this.frequency.slide = random(-0.65, -0.35);
+	}
+	else {
+		this.frequency.start = random(0.5, 1);
+		this.frequency.min = clamp(this.frequency.start - random(0.2, 0.4), 0.2);
+		this.frequency.slide = random(-0.35, -0.15);
+	}
 
-	if maybe() then
-		self.duty.ratio = random(0, 0.5)
-		self.duty.sweep = random(0, 0.2)
-	else
-		self.duty.ratio = random(0.4, 0.9)
-		self.duty.sweep = random(-0.7, 0)
-	end
+	if (maybe()) {
+		this.duty.ratio = random(0, 0.5);
+		this.duty.sweep = random(0, 0.2);
+	}
+	else {
+		this.duty.ratio = random(0.4, 0.9);
+		this.duty.sweep = random(-0.7, 0);
+	}
 
-	self.envelope.attack = 0
-	self.envelope.sustain = random(0.1, 0.3)
-	self.envelope.decay = random(0, 0.4)
+	this.envelope.attack = 0;
+	this.envelope.sustain = random(0.1, 0.3);
+	this.envelope.decay = random(0, 0.4);
 
-	if maybe() then
-		self.envelope.punch = random(0, 0.3)
-	end
+	if (maybe()) {
+		this.envelope.punch = random(0, 0.3);
+	}
 
-	if maybe(2) then
-		self.phaser.offset = random(0, 0.2)
-		self.phaser.sweep = random(-0.2, 0)
-	end
+	if (maybe(2)) {
+		this.phaser.offset = random(0, 0.2);
+		this.phaser.sweep = random(-0.2, 0);
+	}
 
-	if maybe() then
-		self.highpass.cutoff = random(0, 0.3)
-	end
+	if (maybe()) {
+		this.highpass.cutoff = random(0, 0.3);
+	}
 }
 
 sfxr.Sound.prototype.randomExplosion = function (seed) {
-	if seed then setseed(seed) end
-	self:resetParameters()
-	self.wavetype = sfxr.NOISE
+	this.resetParameters();
+	this.wavetype = sfxr.NOISE;
 	
-	if maybe() then
-		self.frequency.start = random(0.1, 0.5)
-		self.frequency.slide = random(-0.1, 0.3)
-	else
-		self.frequency.start = random(0.2, 0.9)
-		self.frequency.slide = random(-0.2, -0.4)
-	end
-	self.frequency.start = self.frequency.start^2
+	if (maybe()) {
+		this.frequency.start = random(0.1, 0.5);
+		this.frequency.slide = random(-0.1, 0.3);
+	}
+	else {
+		this.frequency.start = random(0.2, 0.9);
+		this.frequency.slide = random(-0.2, -0.4);
+	}
+	this.frequency.start = Math.pow(this.frequency.start,2);
 
-	if maybe(4) then
-		self.frequency.slide = 0
-	end
-	if maybe(2) then
-		self.repeatspeed = random(0.3, 0.8)
-	end
+	if (maybe(4)) {
+		this.frequency.slide = 0;
+	}
+	if (maybe(2)) {
+		this.repeatspeed = random(0.3, 0.8);
+	}
 
-	self.envelope.attack = 0
-	self.envelope.sustain = random(0.1, 0.4)
-	self.envelope.punch = random(0.2, 0.8)
-	self.envelope.decay = random(0, 0.5)
+	this.envelope.attack = 0;
+	this.envelope.sustain = random(0.1, 0.4);
+	this.envelope.punch = random(0.2, 0.8);
+	this.envelope.decay = random(0, 0.5);
 
-	if maybe() then
-		self.phaser.offset = random(-0.3, 0.6)
-		self.phaser.sweep = random(-0.3, 0)
-	end
-	if maybe() then
-		self.vibrato.depth = random(0, 0.7)
-		self.vibrato.speed = random(0, 0.6)
-	end
-	if maybe(2) then
-		self.change.speed = random(0.6, 0.9)
-		self.change.amount = random(-0.8, 0.8)
-	end
+	if (maybe()) {
+		this.phaser.offset = random(-0.3, 0.6);
+		this.phaser.sweep = random(-0.3, 0);
+	}
+	if (maybe()) {
+		this.vibrato.depth = random(0, 0.7);
+		this.vibrato.speed = random(0, 0.6);
+	}
+	if (maybe(2)) {
+		this.change.speed = random(0.6, 0.9);
+		this.change.amount = random(-0.8, 0.8);
+	}
 }
 
 sfxr.Sound.prototype.randomPowerup = function (seed) {
