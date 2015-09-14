@@ -10,7 +10,7 @@ Example usage
 
 These examples should play a randomly generated sound.
 
-```
+```js
 // TO BE WRITTEN
 ```
 
