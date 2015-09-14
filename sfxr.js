@@ -317,11 +317,11 @@ sfxr.Sound.prototype.generate = function (freq, bits) {
     var noisebuffer = [];
 
     // Reset the sample buffers
-    for (var i=1; i<1024; i++) {
+    for (var i=0; i<1024; i++) {
         phaserbuffer[i] = 0;
     }
 
-    for (var i=1; i<32; i++) {
+    for (var i=0; i<32; i++) {
         noisebuffer[i] = random(-1, 1);
     }
 	
@@ -489,7 +489,7 @@ sfxr.Sound.prototype.generate = function (freq, bits) {
                 //phase = 0
                 phase = phase % period;
                 if (self.wavetype == sfxr.NOISE) {
-                    for (var i = 1; i < 32; i++) {
+                    for (var i = 0; i < 32; i++) {
                         noisebuffer[i] = random(-1, 1);
                     }
                 }
