@@ -445,7 +445,7 @@ sfxr.Sound.prototype.generate = function (freq, bits) {
 
 		env_time = env_time + 1;
 
-		if (env_time > env_length[env_stage]) {
+		if (env_time > env_length[env_stage - 1]) {
 			env_time = 0;
 			env_stage = env_stage + 1;
 			// After the decay stop generating
@@ -455,14 +455,14 @@ sfxr.Sound.prototype.generate = function (freq, bits) {
 		}
 
 		// Attack, Sustain, Decay/Release
-		if env_stage == 1 {
-			env_vol = env_time / env_length[1];
+		if (env_stage == 1) {
+			env_vol = env_time / env_length[0];
 		}
-		else if env_stage == 2 {
-			env_vol = 1 + Math.pow((1 - env_time / env_length[2]),1) * 2 * self.envelope.punch;
+		else if (env_stage == 2) {
+			env_vol = 1 + Math.pow((1 - env_time / env_length[1]),1) * 2 * self.envelope.punch;
 		}
-		else if env_stage == 3 {
-			env_vol = 1 - env_time / env_length[3];
+		else if (env_stage == 3) {
+			env_vol = 1 - env_time / env_length[2];
 		}
 
 		// Phaser
@@ -518,7 +518,7 @@ sfxr.Sound.prototype.generate = function (freq, bits) {
 			}
 			// Pitched white noise
 			else if (self.wavetype == sfxr.NOISE) {
-				sample = noisebuffer[trunc(phase * 32 / period) % 32 + 1];
+				sample = noisebuffer[trunc(phase * 32 / period) % 32];
 			}
 
 			// Apply the lowpass filter to the sample
@@ -543,8 +543,8 @@ sfxr.Sound.prototype.generate = function (freq, bits) {
 
 			// Apply the phaser to the sample
 
-			phaserbuffer[(ipp & 1023) + 1] = sample;
-			sample = sample + phaserbuffer[((ipp - iphase + 1024) & (1023)) + 1];
+			phaserbuffer[ipp & 1023] = sample;
+			sample = sample + phaserbuffer[((ipp - iphase + 1024) & (1023))];
 			ipp = ((ipp + 1) & 1023);
 
 			// Accumulation and envelope application
@@ -588,13 +588,13 @@ sfxr.Sound.prototype.generate = function (freq, bits) {
 
 sfxr.Sound.prototype.getEnvelopeLimit = function (freq) {
 	var env_length = [
-		Math.pow(self.envelope.attack,2) * 100000,
-		Math.pow(self.envelope.sustain,2) * 100000,
-		Math.pow(self.envelope.decay,2) * 100000
+		Math.pow(this.envelope.attack,2) * 100000,
+		Math.pow(this.envelope.sustain,2) * 100000,
+		Math.pow(this.envelope.decay,2) * 100000
 	];
-	var limit = trunc(env_length[1] + env_length[2] + env_length[3] + 2);
+	var limit = trunc(env_length[0] + env_length[1] + env_length[2] + 2);
 	
-	if (freq == nil || freq == sfxr.FREQ_44100) {
+	if ((typeof freq == "undefined") || freq == sfxr.FREQ_44100) {
 		return limit;
 	}
 	else if (freq == sfxr.FREQ_22050) {
@@ -783,18 +783,17 @@ sfxr.Sound.prototype.mutate = function (amount, seed, changeFreq) {
 }
 
 sfxr.Sound.prototype.randomPickup = function (seed) {
-	if seed then setseed(seed) end
-	self:resetParameters()
-	self.frequency.start = random(0.4, 0.9)
-	self.envelope.attack = 0
-	self.envelope.sustain = random(0, 0.1)
-	self.envelope.punch = random(0.3, 0.6)
-	self.envelope.decay = random(0.1, 0.5)
+	this.resetParameters();
+	this.frequency.start = random(0.4, 0.9);
+	this.envelope.attack = 0;
+	this.envelope.sustain = random(0, 0.1);
+	this.envelope.punch = random(0.3, 0.6);
+	this.envelope.decay = random(0.1, 0.5);
 	
-	if maybe() then
-		self.change.speed = random(0.5, 0.7)
-		self.change.amount = random(0.2, 0.6)
-	end
+	if (maybe()) {
+		this.change.speed = random(0.5, 0.7);
+		this.change.amount = random(0.2, 0.6);
+	}
 }
 
 sfxr.Sound.prototype.randomLaser = function (seed) {
@@ -883,90 +882,89 @@ sfxr.Sound.prototype.randomExplosion = function (seed) {
 }
 
 sfxr.Sound.prototype.randomPowerup = function (seed) {
-	if seed then setseed(seed) end
-	self:resetParameters()
-	if maybe() then
-		self.wavetype = sfxr.SAWTOOTH
-	else
-		self.duty.ratio = random(0, 0.6)
-	end
+	this.resetParameters();
+	if (maybe()) {
+		this.wavetype = sfxr.SAWTOOTH;
+	}
+	else {
+		this.duty.ratio = random(0, 0.6);
+	}
 
-	if maybe() then
-		self.frequency.start = random(0.2, 0.5)
-		self.frequency.slide = random(0.1, 0.5)
-		self.repeatspeed = random(0.4, 0.8)
-	else
-		self.frequency.start = random(0.2, 0.5)
-		self.frequency.slide = random(0.05, 0.25)
-		if maybe() then
-			self.vibrato.depth = random(0, 0.7)
-			self.vibrato.speed = random(0, 0.6)
-		end
-	end
-	self.envelope.attack = 0
-	self.envelope.sustain = random(0, 0.4)
-	self.envelope.decay = random(0.1, 0.5)
+	if (maybe()) {
+		this.frequency.start = random(0.2, 0.5);
+		this.frequency.slide = random(0.1, 0.5);
+		this.repeatspeed = random(0.4, 0.8);
+	}
+	else {
+		this.frequency.start = random(0.2, 0.5);
+		this.frequency.slide = random(0.05, 0.25);
+		if (maybe()) {
+			this.vibrato.depth = random(0, 0.7);
+			this.vibrato.speed = random(0, 0.6);
+		}
+	}
+	this.envelope.attack = 0;
+	this.envelope.sustain = random(0, 0.4);
+	this.envelope.decay = random(0.1, 0.5);
 }
 
 sfxr.Sound.prototype.randomHit = function (seed) {
-	if seed then setseed(seed) end
-	self:resetParameters()
-	self.wavetype = trunc(random(0, 3))
+	this.resetParameters();
+	this.wavetype = trunc(random(0, 3));
 
-	if self.wavetype == sfxr.SINE then
-		self.wavetype = sfxr.NOISE
-	elseif self.wavetype == sfxr.SQUARE then
-		self.duty.ratio = random(0, 0.6)
-	end
+	if (this.wavetype == sfxr.SINE) {
+		this.wavetype = sfxr.NOISE;
+	}
+	else if (this.wavetype == sfxr.SQUARE) {
+		this.duty.ratio = random(0, 0.6);
+	}
 
-	self.frequency.start = random(0.2, 0.8)
-	self.frequency.slide = random(-0.7, -0.3)
-	self.envelope.attack = 0
-	self.envelope.sustain = random(0, 0.1)
-	self.envelope.decay = random(0.1, 0.3)
+	this.frequency.start = random(0.2, 0.8);
+	this.frequency.slide = random(-0.7, -0.3);
+	this.envelope.attack = 0;
+	this.envelope.sustain = random(0, 0.1);
+	this.envelope.decay = random(0.1, 0.3);
 
-	if maybe() then
-		self.highpass.cutoff = random(0, 0.3)
-	end
+	if (maybe()) {
+		this.highpass.cutoff = random(0, 0.3);
+	}
 }
 
 sfxr.Sound.prototype.randomJump = function (seed) {
-	if seed then setseed(seed) end
-	self:resetParameters()
-	self.wavetype = sfxr.SQUARE
+	this.resetParameters();
+	this.wavetype = sfxr.SQUARE;
 
-	self.duty.value = random(0, 0.6)
-	self.frequency.start = random(0.3, 0.6)
-	self.frequency.slide = random(0.1, 0.3)
+	this.duty.value = random(0, 0.6);
+	this.frequency.start = random(0.3, 0.6);
+	this.frequency.slide = random(0.1, 0.3);
 
-	self.envelope.attack = 0
-	self.envelope.sustain = random(0.1, 0.4)
-	self.envelope.decay = random(0.1, 0.3)
+	this.envelope.attack = 0;
+	this.envelope.sustain = random(0.1, 0.4);
+	this.envelope.decay = random(0.1, 0.3);
 
-	if maybe() then
-		self.highpass.cutoff = random(0, 0.3)
-	end
-	if maybe() then
-		self.lowpass.cutoff = random(0.4, 1)
-	end
+	if (maybe()) {
+		this.highpass.cutoff = random(0, 0.3);
+	}
+	if (maybe()) {
+		this.lowpass.cutoff = random(0.4, 1);
+	}
 }
 
 sfxr.Sound.prototype.randomBlip = function (seed) {
-	if seed then setseed(seed) end
-	self:resetParameters()
-	self.wavetype = trunc(random(0, 2))
+	this.resetParameters();
+	this.wavetype = trunc(random(0, 2));
 
-	if self.wavetype == sfxr.SQUARE then
-		self.duty.ratio = random(0, 0.6)
-	end
+	if (this.wavetype == sfxr.SQUARE) {
+		this.duty.ratio = random(0, 0.6);
+	}
 
-	self.frequency.start = random(0.2, 0.6)
-	self.envelope.attack = 0
-	self.envelope.sustain = random(0.1, 0.2)
-	self.envelope.decay = random(0, 0.2)
-	self.highpass.cutoff = 0.1
+	this.frequency.start = random(0.2, 0.6);
+	this.envelope.attack = 0;
+	this.envelope.sustain = random(0.1, 0.2);
+	this.envelope.decay = random(0, 0.2);
+	this.highpass.cutoff = 0.1;
 }
-
+/*
 sfxr.Sound.prototype.exportWAV = function (f, freq, bits) {
 	freq = freq or sfxr.FREQ_44100
 	bits = bits or sfxr.BITS_16
@@ -1282,3 +1280,4 @@ sfxr.Sound.prototype.loadBinary = function (f) {
 
 	assert(off-1 == s:len())
 }
+*/
