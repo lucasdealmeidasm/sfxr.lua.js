@@ -651,12 +651,19 @@ sfxr.Sound.prototype.generateString = function (freq, bits, endianness) {
 	return buf.map(c => String.fromCharCode(c)).join("");
 }
 
-sfxr.Sound.prototype.generateSoundData = function (freq, bits) {
+sfxr.Sound.prototype.generateAudioBuffer = function (freq, audioCtx) {
 	freq = freq ? freq : sfxr.FREQ_44100;
 	var tab = this.generateTable(freq, sfxr.BITS_FLOAT);
 
 	if (tab.length == 0) {
 		return null;
+	}
+	
+	var buf = audioCtx.createBuffer(1, tab.length, freq);
+	var data = buf.getChannelData(0);
+	
+	for(var i = 0; i < tab.length; i++) {
+		data[i] = tab[i];
 	}
 	
 	/*
@@ -666,10 +673,11 @@ sfxr.Sound.prototype.generateSoundData = function (freq, bits) {
 		data:setSample(i, tab[i + 1])
 	end
 	*/
-	return data;
+	
+	return buf;
 }
 
-sfxr.Sound.prototype.play = function (freq, bits) {
+sfxr.Sound.prototype.play = function (freq, audioCtx) {
 	/*
 	local data = self:generateSoundData(freq, bits)
 
@@ -679,6 +687,13 @@ sfxr.Sound.prototype.play = function (freq, bits) {
 		return source
 	end
 	*/
+	
+	var audioBuffer = this.generateAudioBuffer(freq, audioCtx);
+	
+	var source = audioCtx.createBufferSource();
+	source.buffer = audioBuffer;
+	source.connect(audioCtx.destination);
+	source.start();
 }
 
 sfxr.Sound.prototype.randomize = function () {
