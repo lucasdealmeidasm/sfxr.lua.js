@@ -25,6 +25,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+sfxr = (function() {
+
 var sfxr = {};
 //local bit = bit32 or require("bit");
 
@@ -1296,3 +1298,5 @@ sfxr.Sound.prototype.loadBinary = function (f) {
 	assert(off-1 == s:len())
 }
 */
+
+return sfxr; })();
