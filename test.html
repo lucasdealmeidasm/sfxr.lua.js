@@ -1,0 +1,34 @@
+<html>
+	<head>
+		<script src="sfxr.js"></script>
+		<script>
+audioCtx = new AudioContext();
+sound = new sfxr.Sound();
+
+function UpdateSliders() {
+}
+		</script>
+	</head>
+	<body>
+		<h3>GENERATOR</h3>
+		<input type="button" value="PICKUP/COIN" onclick="sound.randomPickup(); sound.play(sfxr.FREQ_44100, audioCtx);" />
+		<input type="button" value="LASER/SHOOT" onclick="sound.randomLaser(); sound.play(sfxr.FREQ_44100, audioCtx);" />
+		<input type="button" value="EXPLOSION" onclick="sound.randomExplosion(); sound.play(sfxr.FREQ_44100, audioCtx);" />
+		<input type="button" value="POWERUP" onclick="sound.randomPowerup(); sound.play(sfxr.FREQ_44100, audioCtx);" />
+		<input type="button" value="HIT/HURT" onclick="sound.randomHit(); sound.play(sfxr.FREQ_44100, audioCtx);" />
+		<input type="button" value="JUMP" onclick="sound.randomJump(); sound.play(sfxr.FREQ_44100, audioCtx);" />
+		<input type="button" value="BLIP/SELECT" onclick="sound.randomBlip(); sound.play(sfxr.FREQ_44100, audioCtx);" />
+		<input type="button" value="MUTATE" onclick="sound.mutate(); sound.play(sfxr.FREQ_44100, audioCtx);" />
+		<input type="button" value="RANDOMIZE" onclick="sound.randomize(); sound.play(sfxr.FREQ_44100, audioCtx);" /><br>
+		<h3>MANUAL SETTINGS</h3>
+		<select onchange="sound.wavetype = eval(this.value);">
+			<option value="sfxr.SQUARE">SQUAREWAVE</option>
+			<option value="sfxr.SAWTOOTH">SAWTOOTH</option>
+			<option value="sfxr.SINE">SINEWAVE</option>
+			<option value="sfxr.NOISE">NOISE</option>
+		</select><br>
+		<h3>EXPORT</h3>
+		<textarea id="txtJson"></textarea><br>
+		<input type="button" value="GET JSON" onclick="document.getElementById('txtJson').value = JSON.stringify(sound);" />
+	</body>
+</html>
