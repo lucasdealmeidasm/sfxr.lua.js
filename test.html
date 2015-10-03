@@ -27,6 +27,7 @@ function UpdateSliders() {
 			<option value="sfxr.SINE">SINEWAVE</option>
 			<option value="sfxr.NOISE">NOISE</option>
 		</select><br>
+		<input type="button" value="PLAY" onclick="sound.play(sfxr.FREQ_44100, audioCtx);" /><br>
 		<h3>EXPORT</h3>
 		<textarea id="txtJson"></textarea><br>
 		<input type="button" value="GET JSON" onclick="document.getElementById('txtJson').value = JSON.stringify(sound);" />
