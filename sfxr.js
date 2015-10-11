@@ -72,12 +72,12 @@ function random(low, high) {
 
 // Returns a random boolean weighted to false by n
 function maybe(n) {
-	return trunc(random(0, n ? n : 1)) == 0;
+	return trunc(random(0, (typeof n == "number") ? n : 1)) == 0;
 }
 
 // Clamps n between min and max
 function clamp(n, min, max) {
-	return Math.max(min ? min : Number.NEGATIVE_INFINITY, Math.min(max ? max : Number.POSITIVE_INFINITY, n));
+	return Math.max((typeof min == "number") ? min : Number.NEGATIVE_INFINITY, Math.min((typeof max == "number") ? max : Number.POSITIVE_INFINITY, n));
 }
 
 // Copies a table (shallow) or a primitive
