@@ -7,6 +7,13 @@ sound = new sfxr.Sound();
 
 function UpdateSliders() {
 }
+
+function FromJSON() {
+	var json = JSON.parse(document.getElementById('txtJson').value);
+	for(var i in json) {
+		sound[i] = json[i];
+	}
+}
 		</script>
 	</head>
 	<body>
@@ -29,7 +36,9 @@ function UpdateSliders() {
 		</select><br>
 		<input type="button" value="PLAY" onclick="sound.play(sfxr.FREQ_44100, audioCtx);" /><br>
 		<h3>EXPORT</h3>
+		<label for="txtJson">JSON:</label><br>
 		<textarea id="txtJson"></textarea><br>
 		<input type="button" value="GET JSON" onclick="document.getElementById('txtJson').value = JSON.stringify(sound);" />
+		<input type="button" value="SET FROM JSON" onclick="FromJSON();" />
 	</body>
 </html>
